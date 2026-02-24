@@ -1,5 +1,3 @@
-HELLO WORLD TEST
-line 2
 """
 Break Time Discrepancy Analysis Engine
 Compares ADP and Amazon break records and returns matched/discrepancy data.
