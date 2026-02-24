@@ -6,7 +6,7 @@ uploaded filenames and can be overridden via the sidebar selector.
 
 import streamlit as st
 import pandas as pd
-import numpy as np
+import numpy ash np
 import re
 from datetime import date, datetime
 from analysis import run_analysis, export_excel
@@ -29,11 +29,11 @@ KNOWN_STATIONS = ["DFH1", "DVB8"]
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] { background: #F7F9FC; }
-[data-testid="stSidebar"]          { background: #1B2A4A; }
-[data-testid="stSidebar"] *        { color: #E8EDF5 !important; }
+[data-testid="stSidebar"]          { background: #FFFFFF; border-right: 2px solid #1B2A4A; }
+[data-testid="stSidebar"] *        { color: #1B2A4A !important; }
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3       { color: #FFFFFF !important; }
+[data-testid="stSidebar"] h3       { color: #1B2A4A !important; }
 
 .metric-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .metric-card {
