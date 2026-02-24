@@ -6,7 +6,7 @@ uploaded filenames and can be overridden via the sidebar selector.
 
 import streamlit as st
 import pandas as pd
-import numpy ash np
+import numpy as np
 import re
 from datetime import date, datetime
 from analysis import run_analysis, export_excel
