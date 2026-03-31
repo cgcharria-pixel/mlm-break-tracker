@@ -1,5 +1,5 @@
 """
-MLM Break Time Tracker - Streamlit Dashboard
+MLM Break Time Tracker — Streamlit Dashboard
 Supports multiple stations (DFH1, DVB8). Station is auto-detected from
 uploaded filenames and can be overridden via the sidebar selector.
 """
@@ -11,21 +11,21 @@ import re
 from datetime import date, datetime
 from analysis import run_analysis, export_excel
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # PAGE CONFIG
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="MLM Break Time Tracker",
-    page_icon="T",
+    page_icon="⏱️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 KNOWN_STATIONS = ["DFH1", "DVB8"]
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # CUSTOM CSS
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 [data-testid="stAppViewContainer"] { background: #F7F9FC; }
@@ -84,16 +84,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # PASSWORD GATE
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 def check_password() -> bool:
     if st.session_state.get("authenticated"):
         return True
 
     st.markdown("""
     <div style="max-width:380px;margin:80px auto 0;text-align:center;">
-      <div style="font-size:2.8rem;margin-bottom:8px;">T</div>
+      <div style="font-size:2.8rem;margin-bottom:8px;">⏱️</div>
       <h2 style="color:#1B2A4A;margin-bottom:4px;">MLM Break Time Tracker</h2>
       <p style="color:#6B7280;font-size:0.9rem;">Enter your access password to continue</p>
     </div>
@@ -102,9 +102,9 @@ def check_password() -> bool:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         pw = st.text_input("Password", type="password",
-                           label_visibility="collapsed", placeholder="Enter password")
+                           label_visibility="collapsed", placeholder="Enter password…")
         if st.button("Sign In", use_container_width=True, type="primary"):
-            correct = st.secrets.get("APP_PASSWORD", "mlm2026")
+            correct = st.secrets.get("APP_PASSWORD", "CARCH2026")
             if pw == correct:
                 st.session_state["authenticated"] = True
                 st.rerun()
@@ -113,24 +113,25 @@ def check_password() -> bool:
     return False
 
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # HELPERS
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 SEV_CLASS = {
-    "Major":         ("s-major",   "RED"),
-    "Moderate":      ("s-mod",     "ORANGE"),
-    "Minor":         ("s-minor",   "YELLOW"),
-    "Missing Entry": ("s-missing", "PURPLE"),
-    "Match":         ("",          "CHECK"),
+    "Major":         ("s-major",   "🔴"),
+    "Moderate":      ("s-mod",     "🟠"),
+    "Minor":         ("s-minor",   "🟡"),
+    "Missing Entry": ("s-missing", "🟣"),
+    "Match":         ("",          "✅"),
 }
 
 def fmt_time(val):
-    if val is None or (isinstance(val, float) and np.isnan(val)): return "-"
+    if val is None or (isinstance(val, float) and np.isnan(val)): return "—"
     try:
         return val.strftime("%-I:%M %p") if hasattr(val, "strftime") else str(val)
     except Exception: return str(val)
 
 def detect_station(adp_name: str, amz_name: str) -> str:
+    """Scan filenames for known station codes; return first match or empty string."""
     combined = f"{adp_name} {amz_name}".upper()
     for s in KNOWN_STATIONS:
         if s in combined:
@@ -151,20 +152,22 @@ def infer_date(adp_name: str, amz_name: str) -> str:
     return date.today().strftime("%B %d, %Y")
 
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # SIDEBAR
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 def render_sidebar():
     with st.sidebar:
-        st.markdown("## Break Time Tracker")
+        st.markdown("## ⏱️ Break Time Tracker")
         st.markdown("---")
-        st.markdown("### Upload Daily Files")
+        st.markdown("### 📂 Upload Daily Files")
 
         adp_file    = st.file_uploader("ADP Timecard Export (.xlsx)",    type=["xlsx"], key="adp_upload")
         amazon_file = st.file_uploader("Amazon Break Utilization (.xlsx)", type=["xlsx"], key="amz_upload")
 
-        st.markdown("### Station")
+        # ── Station selector ──────────────────────────────────────
+        st.markdown("### 🏭 Station")
 
+        # Auto-detect from filenames when files are uploaded
         auto_station = ""
         if adp_file and amazon_file:
             auto_station = detect_station(adp_file.name, amazon_file.name)
@@ -181,34 +184,34 @@ def render_sidebar():
         )
 
         if auto_station and auto_station == station:
-            st.caption(f"Auto-detected: {station} from filename")
+            st.caption(f"✅ Auto-detected: **{station}** from filename")
         elif auto_station and auto_station != station:
-            st.caption(f"Auto-detected {auto_station}, overridden to {station}")
+            st.caption(f"⚠️ Auto-detected **{auto_station}**, overridden to **{station}**")
         else:
-            st.caption("Station not found in filename - please confirm above.")
+            st.caption("Station not found in filename — please confirm above.")
 
         st.markdown("---")
 
         run_btn = st.button(
-            "Run Analysis",
+            "▶  Run Analysis",
             use_container_width=True,
             type="primary",
             disabled=(adp_file is None or amazon_file is None),
         )
 
         st.markdown("---")
-        st.markdown("### How to use")
+        st.markdown("### ℹ️ How to use")
         st.markdown("""
 1. Upload both files above
 2. Confirm the station
 3. Click **Run Analysis**
 4. Review the dashboard
-5. Download Excel report
+5. Download Excel report → save to your station folder
 6. Use 5 PM Scripts tab for conversations
         """)
 
         st.markdown("---")
-        if st.button("Sign Out", use_container_width=True):
+        if st.button("🔒 Sign Out", use_container_width=True):
             st.session_state["authenticated"] = False
             st.session_state.pop("results", None)
             st.rerun()
@@ -222,20 +225,20 @@ def render_sidebar():
     return adp_file, amazon_file, station, run_btn
 
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # METRIC CARDS
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 def render_metrics(df: pd.DataFrame):
     counts = df["severity"].value_counts()
     needs  = int(df["needs_action"].sum())
     cards  = [
         ("total",   len(df),                        "Total Employees"),
         ("action",  needs,                          "Need Action"),
-        ("major",   counts.get("Major", 0),         "Major"),
-        ("mod",     counts.get("Moderate", 0),      "Moderate"),
-        ("minor",   counts.get("Minor", 0),         "Minor"),
-        ("missing", counts.get("Missing Entry", 0), "Missing Entry"),
-        ("match",   counts.get("Match", 0),         "Match"),
+        ("major",   counts.get("Major", 0),         "🔴 Major"),
+        ("mod",     counts.get("Moderate", 0),      "🟠 Moderate"),
+        ("minor",   counts.get("Minor", 0),         "🟡 Minor"),
+        ("missing", counts.get("Missing Entry", 0), "🟣 Missing Entry"),
+        ("match",   counts.get("Match", 0),         "✅ Match"),
     ]
     html = '<div class="metric-row">'
     for key, val, lbl in cards:
@@ -245,29 +248,29 @@ def render_metrics(df: pd.DataFrame):
     st.markdown(html, unsafe_allow_html=True)
 
 
-# -----------------------------------------------------------------
-# TAB 1 - DISCREPANCY TABLE
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
+# TAB 1 — DISCREPANCY TABLE
+# ─────────────────────────────────────────────────────────────────
 def render_table(df: pd.DataFrame):
     issues = df[df["needs_action"]].copy()
     if issues.empty:
-        st.success("No discrepancies today - all break times match!")
+        st.success("🎉 No discrepancies today — all break times match!")
         return
 
     rows = []
     for _, row in issues.iterrows():
-        sev  = row.get("severity", "-")
+        sev  = row.get("severity", "—")
         a_m  = row.get("amz_break_minutes")
         b_m  = row.get("adp_break_minutes")
         diff = row.get("diff_minutes")
         _, icon = SEV_CLASS.get(sev, ("", ""))
         rows.append({
-            "Employee":      str(row.get("adp_name") or row.get("amz_name") or "-"),
+            "Employee":      str(row.get("adp_name") or row.get("amz_name") or "—"),
             "Severity":      f"{icon} {sev}",
-            "Amazon Break":  f"{a_m:.0f} min" if pd.notna(a_m) else "-",
-            "ADP Break":     f"{b_m:.0f} min" if pd.notna(b_m) else "-",
-            "Difference":    f"{diff:+.1f} min" if pd.notna(diff) else "-",
-            "Direction":     str(row.get("direction", "-")),
+            "Amazon Break":  f"{a_m:.0f} min" if pd.notna(a_m) else "—",
+            "ADP Break":     f"{b_m:.0f} min" if pd.notna(b_m) else "—",
+            "Difference":    f"{diff:+.1f} min" if pd.notna(diff) else "—",
+            "Direction":     str(row.get("direction", "—")),
             "Amz Start":     fmt_time(row.get("amz_break_start")),
             "Amz End":       fmt_time(row.get("amz_break_end")),
             "ADP Start":     fmt_time(row.get("adp_break_start")),
@@ -293,60 +296,60 @@ def render_table(df: pd.DataFrame):
     )
 
 
-# -----------------------------------------------------------------
-# TAB 2 - CONVERSATION SCRIPTS
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
+# TAB 2 — CONVERSATION SCRIPTS
+# ─────────────────────────────────────────────────────────────────
 def render_scripts(df: pd.DataFrame):
     issues = df[df["needs_action"]].reset_index(drop=True)
     if issues.empty:
-        st.success("No conversations needed today - all break times match!")
+        st.success("🎉 No conversations needed today — all break times match!")
         return
 
     st.markdown(f"**{len(issues)} employees to speak with at 5 PM.** Expand any card to copy the script.")
     st.markdown("")
 
     for _, row in issues.iterrows():
-        sev    = row.get("severity", "-")
-        emp    = str(row.get("adp_name") or row.get("amz_name") or "-")
+        sev    = row.get("severity", "—")
+        emp    = str(row.get("adp_name") or row.get("amz_name") or "—")
         script = row.get("conversation_script", "")
         a_m    = row.get("amz_break_minutes")
         b_m    = row.get("adp_break_minutes")
         diff   = row.get("diff_minutes")
         sc, icon = SEV_CLASS.get(sev, ("", ""))
 
-        a_str = f"{a_m:.0f} min" if pd.notna(a_m) else "-"
-        b_str = f"{b_m:.0f} min" if pd.notna(b_m) else "-"
-        d_str = f"{diff:+.1f} min" if pd.notna(diff) else "-"
+        a_str = f"{a_m:.0f} min" if pd.notna(a_m) else "—"
+        b_str = f"{b_m:.0f} min" if pd.notna(b_m) else "—"
+        d_str = f"{diff:+.1f} min" if pd.notna(diff) else "—"
 
         with st.expander(
-            f"{icon}  **{emp}** - {sev}  |  Amazon: {a_str}  ADP: {b_str}  Diff: {d_str}"
+            f"{icon}  **{emp}** — {sev}  |  Amazon: {a_str}  ·  ADP: {b_str}  ·  Diff: {d_str}"
         ):
             st.markdown(f"""
             <div class="script-card {sc}">
-              <h4>Conversation Script</h4>
+              <h4>💬 Conversation Script</h4>
               <p>{script}</p>
             </div>
             """, unsafe_allow_html=True)
             st.code(script, language=None)
 
 
-# -----------------------------------------------------------------
-# TAB 3 - ALL EMPLOYEES
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
+# TAB 3 — ALL EMPLOYEES
+# ─────────────────────────────────────────────────────────────────
 def render_all(df: pd.DataFrame):
     rows = []
     for _, row in df.iterrows():
-        sev  = row.get("severity", "-")
+        sev  = row.get("severity", "—")
         a_m  = row.get("amz_break_minutes")
         b_m  = row.get("adp_break_minutes")
         diff = row.get("diff_minutes")
         _, icon = SEV_CLASS.get(sev, ("", ""))
         rows.append({
-            "Employee (ADP)": str(row.get("adp_name") or "-"),
-            "Amazon DA Name": str(row.get("amz_name") or "-"),
-            "Amazon (min)":   f"{a_m:.0f}" if pd.notna(a_m) else "-",
-            "ADP (min)":      f"{b_m:.0f}" if pd.notna(b_m) else "-",
-            "Difference":     f"{diff:+.1f}" if pd.notna(diff) else "-",
+            "Employee (ADP)": str(row.get("adp_name") or "—"),
+            "Amazon DA Name": str(row.get("amz_name") or "—"),
+            "Amazon (min)":   f"{a_m:.0f}" if pd.notna(a_m) else "—",
+            "ADP (min)":      f"{b_m:.0f}" if pd.notna(b_m) else "—",
+            "Difference":     f"{diff:+.1f}" if pd.notna(diff) else "—",
             "Status":         f"{icon} {sev}",
         })
 
@@ -369,17 +372,18 @@ def render_all(df: pd.DataFrame):
     )
 
 
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 # MAIN APP
-# -----------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────
 def main():
     if not check_password():
         return
 
     adp_file, amazon_file, station, run_btn = render_sidebar()
 
+    # ── Run analysis ─────────────────────────────────────────────
     if run_btn and adp_file and amazon_file:
-        with st.spinner(f"Analyzing break records for station {station}..."):
+        with st.spinner(f"Analyzing break records for station {station}…"):
             try:
                 df          = run_analysis(adp_file, amazon_file)
                 report_date = infer_date(adp_file.name, amazon_file.name)
@@ -394,10 +398,11 @@ def main():
                 st.error(f"Analysis failed: {e}")
                 return
 
+    # ── Welcome screen (no results yet) ──────────────────────────
     if "results" not in st.session_state:
         st.markdown("""
         <div class="page-header">
-          <h1>MLM Break Time Tracker</h1>
+          <h1>⏱️ MLM Break Time Tracker</h1>
           <p>Upload the ADP and Amazon files in the sidebar, confirm the station, then click <strong>Run Analysis</strong>.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -408,7 +413,7 @@ def main():
         c3.info("**Step 3:** Click **Run Analysis** and review results")
 
         st.markdown("---")
-        st.markdown("#### Recommended Folder Structure")
+        st.markdown("#### 📁 Recommended Folder Structure")
         st.markdown("""
         <div class="folder-tip">
         Save your daily downloaded reports to the matching station folder on your computer:<br><br>
@@ -418,6 +423,7 @@ def main():
         """, unsafe_allow_html=True)
         return
 
+    # ── Dashboard ─────────────────────────────────────────────────
     df          = st.session_state["results"]
     report_date = st.session_state.get("report_date", "")
     station     = st.session_state.get("station", "")
@@ -425,10 +431,10 @@ def main():
 
     st.markdown(f"""
     <div class="page-header">
-      <h1>Break Time Discrepancy Report
+      <h1>⏱️ Break Time Discrepancy Report
         <span class="station-badge">{station}</span>
       </h1>
-      <p>{report_date}  -
+      <p>{report_date}  ·
          <strong style="color:#E87722;">{disc_count} employee{"s" if disc_count != 1 else ""}
          need{"" if disc_count != 1 else "s"} correction before 5 PM</strong>
       </p>
@@ -437,13 +443,14 @@ def main():
 
     render_metrics(df)
 
+    # ── Download + folder tip ─────────────────────────────────────
     col_dl, col_tip = st.columns([2, 5])
     with col_dl:
         safe_date    = report_date.replace(" ", "-").replace(",", "")
         excel_bytes  = export_excel(df, report_date, station)
         filename     = f"Break_Discrepancy_Report_{station}_{safe_date}.xlsx"
         st.download_button(
-            label="Download Excel Report",
+            label="⬇️  Download Excel Report",
             data=excel_bytes,
             file_name=filename,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -451,17 +458,18 @@ def main():
         )
     with col_tip:
         st.markdown(
-            f'<div class="folder-tip">Save this report to: '
+            f'<div class="folder-tip">💡 Save this report to: '
             f'<code>MLM / {station} / Reports / {filename}</code></div>',
             unsafe_allow_html=True,
         )
 
     st.markdown("---")
 
+    # ── Tabs ───────────────────────────────────────────────────────
     tab1, tab2, tab3 = st.tabs([
-        f"Needs Action ({disc_count})",
-        "5 PM Scripts",
-        f"All Employees ({len(df)})",
+        f"⚠️  Needs Action ({disc_count})",
+        "💬  5 PM Scripts",
+        f"📊  All Employees ({len(df)})",
     ])
     with tab1: render_table(df)
     with tab2: render_scripts(df)
